@@ -1,0 +1,36 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["transactionApi"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model invitelink {
+  id        Int      @id @default(autoincrement())
+  token     String
+  timestamp DateTime @default(now())
+  status    String
+}
+
+model roles {
+  id   Int    @id @default(autoincrement())
+  role String @unique
+}
+
+model user {
+  id       Int    @id @default(autoincrement())
+  username String
+  password String
+  roleid   Int
+  status   String
+}
+
+model userstatus {
+  id      Int    @id @default(autoincrement())
+  userid  Int
+  status  String
+  adminid Int
+}

@@ -1,0 +1,12 @@
+extends layout
+
+block content
+    form(action="http://localhost:3000/invitelink/hi", method="post")
+        div
+            span USERNAME :
+            input(type="text", name="username")
+        div
+            span Password :
+            input(type="text", name="username")
+            input(type="hidden", name="token", value=token)
+        button(type="submit",name="Submit") Submit

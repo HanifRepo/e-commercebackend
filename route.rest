@@ -1,0 +1,27 @@
+POST http://localhost:3000/users/login
+content-Type: application/json
+
+{
+    "username": "hanif",
+    "password": "hanif"
+}
+
+###
+
+GET http://localhost:3000/admin/genetarelink
+content-Type: application/json
+
+###
+
+GET http://localhost:3000/invitelink/3e6f8224cc5c0d39d0e8dcaed226b86439b352dfe87dc3f70defdcd11c3fb40681678332a004cf12cb76ac071e28836d
+
+###
+
+POST http://localhost:3000/invitelink/fc7f2ad094fd157072494b4def0aba461550178dffc04f5a98cc8ce022fc8b38e1a0539e75cb5f9b0c93861e3b58f939
+content-type: application/json
+
+{
+    "username":"hie",
+    "password":"helloe",
+    "token":"fc7f2ad094fd157072494b4def0aba461550178dffc04f5a98cc8ce022fc8b38e1a0539e75cb5f9b0c93861e3b58f939"
+}
