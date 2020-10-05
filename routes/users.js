@@ -1,7 +1,8 @@
+require('dotenv').config();
 var express = require('express');
 var router = express.Router();
 var { PrismaClient } = require('@prisma/client')
-
+var jwt = require('jsonwebtoken');
 var prisma = new PrismaClient();
 
 /* GET users listing. */
@@ -21,6 +22,13 @@ router.post('/login',async function(req, res, next) {
       }
     });
     var roles = getRole.role;
+    const user={ 
+      name: verifyUser.username,
+      password: verifyUser.password,
+      role: roles
+    }
+    const accessToken = jwt.sign(user,process.env.SECRET_KEY,{expiresIn:'20m'});
+    const refreshToken = jwt.sign(user,process.env.REFRESH_KEY);
     if(roles === "seller"){
       const getStatus = await prisma.userstatus.findFirst({
         where : {
@@ -28,16 +36,53 @@ router.post('/login',async function(req, res, next) {
         }
       });
       if(getStatus.status === "accept"){
-        return res.send({signing:"success" , role: roles})
+        const addtoken = await prisma.refreshtokens.create({
+          data:{
+            token: refreshToken
+          }
+        })
+        if(addtoken!== null){
+          return res.send({signing:"success" , role: roles,token: accessToken,refresh: refreshToken})
+        } else{
+          return res.sendStatus(401);
+        }
       } 
       else {
         return res.send({signing:"failed" , status : getStatus.status})
       }
     } else{
-      return res.send({signing:"success" , role: roles})
+      const addtoken = await prisma.refreshtokens.create({
+        data:{
+          token: refreshToken
+        }
+      })
+      if(addtoken!== null){
+        return res.send({signing:"success" , role: roles,token: accessToken,refresh: refreshToken})
+      } else{
+        return res.sendStatus(401);
+      }
     }
   } else{
     res.send({signing:"failed"});
+  }
+});
+
+router.post('/refreshtoken',async function(req,res,next) {
+  const refreshToken = req.body.token;
+  if(refreshToken === null)return res.sendStatus(401)
+  const isTokenExist = await prisma.refreshtokens.findMany({
+    where:{
+      tokens: refreshToken
+    }
+  })
+  if(isTokenExist.length === 0){
+    return res.sendStatus(403);
+  } else{
+    jwt.verify(token,process.env.REFRESH_KEY,(err,name) =>{
+      if(err) return res.sendStaus(403);
+      const accessToken = jwt.sign(name,process.env.SECRET_KEY,{expiresIn:'20m'});
+      return res.send({token: accessToken});
+    })
   }
 });
 
@@ -117,5 +162,19 @@ router.post('/decativate',async function(req,res,next){
     return res.send({deactivate: "failed"});
   }
 })
+
+router.post('/logout',async function(req,res){//Needed refresh token to logout
+  const refToken = req.body.refreshtoken;
+  const ref = await prisma.refreshtokens.delete({
+    where:{
+      tokens: refToken
+    }
+  })
+  if(ref !== null || ref.length !==0){
+    return res.send({logout:'successful'});
+  } else{
+    return res.send({logout:'error'});
+  }
+});
 
 module.exports = router;

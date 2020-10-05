@@ -34,3 +34,8 @@ model userstatus {
   status  String
   adminid Int
 }
+
+model refreshtokens {
+  id     Int    @id @default(autoincrement())
+  tokens String
+}

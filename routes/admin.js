@@ -5,7 +5,7 @@ var { PrismaClient } = require('@prisma/client')
 var prisma = new PrismaClient();
 
 
-router.get('/genetarelink',async function(req,res,next){//GENERATING LINk
+router.get('/genetarelink',autenticateToken,async function(req,res,next){//GENERATING LINk
     res.setHeader('Content-Type', 'application/json');
     //NEED TO ADD ADMIN VERIFICATION
     var token;
@@ -35,7 +35,7 @@ router.get('/genetarelink',async function(req,res,next){//GENERATING LINk
     }
 });
 
-router.post('/acceptUser',async function(req,res,next){//ACCEPTING SELLER
+router.post('/acceptUser',autenticateToken ,async function(req,res,next){//ACCEPTING SELLER
     res.setHeader('Content-Type', 'application/json');
     //NEED TO ADD ADMIN VERIFICATION
     username = req.body.username;
@@ -78,7 +78,7 @@ router.post('/acceptUser',async function(req,res,next){//ACCEPTING SELLER
     }
 });
 
-router.post('/blockaccount',async function(req,res,next){
+router.post('/blockaccount',autenticateToken,async function(req,res,next){
     var username = req.body.username;
     var blockUser = await prisma.user.updateMany({
         where:{
@@ -95,6 +95,26 @@ router.post('/blockaccount',async function(req,res,next){
     }
 });
 
+async function autenticateToken(req,res,next){
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if(token === null) return res.sendStaus(401);
+  
+    jwt.verify(token,process.env.SECRET_KEY,(err,name) =>{
+      if(err) return res.sendStaus(403);
+      req.answer = name;
+    })
+    const verifyUser = await prisma.user.findFirst({
+        where : {
+          username: req.answer.username
+        }
+    });
+    if(verifyUser !== null && verifyUser.password === req.answer.password && verifyUser.status === "open"){
+        next();
+    } else{
+        res.sendStaus(401);
+    }
+}
 
 
 module.exports = router;
